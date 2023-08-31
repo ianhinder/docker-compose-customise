@@ -1,6 +1,6 @@
 FROM docker:24.0.5-cli-alpine3.18
 RUN apk update
-RUN apk add bash age curl
+RUN apk add bash age curl jq coreutils
 
 ENV SOPS_VERSION 3.7.3
 
