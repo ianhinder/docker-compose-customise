@@ -1,0 +1,4 @@
+services:
+  docker-compose-customise:
+    build: .
+    image: ianhinder/docker-compose-customise:${DCC_VERSION:?}
