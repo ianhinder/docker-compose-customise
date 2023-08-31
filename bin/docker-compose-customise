@@ -15,7 +15,7 @@ envargs=$(for envfile in $envcanon/*.env; do echo --env-file $envfile; done)
 ymlargs=$(for ymlfile in $envcanon/*.yml; do if [ ${ymlfile##*/} != "$secretsfilename" ]; then echo -f $ymlfile; fi; done)
 
 if [ -r $env/project.conf ]; then
-    source $env/dcc.conf
+    source $env/project.conf
     # project_reset_time
 fi
 
@@ -26,10 +26,12 @@ projectpath=${env%/*}
 projectname=${projectpath##*/}
 
 if [ -n "${project_reset_time+1}" ]; then
-    container_ids=( $(docker compose -p $projectname ps --format json | jq -r '.[] | .ID') )
+    container_ids=( $(docker compose -p $projectname ps -a --format json | jq -r '.[] | .ID') )
 
     if [ ${#container_ids[*]} -ne 0 ]; then
         for container_id in ${container_ids[*]}; do
+
+            # TODO: we should really be looking at the date the volumes are created
             container_created=$(docker container inspect --format '{{.Created}}' $container_id)
             container_created_s=$(date --date="${container_created}" +%s)
             if [ -n "${project_createds+1}" ]; then
@@ -40,16 +42,20 @@ if [ -n "${project_reset_time+1}" ]; then
                 project_created_s=$container_created_s
             fi
         done
-    fi
 
-    project_reset_time_s=$(date --date="$project_reset_time" +%s)
+        project_reset_time_s=$(date --date="$project_reset_time" +%s)
 
-    if [ $project_reset_time_s -gt $project_created_s ]; then
-        echo "Bringing down $projectname and deleting its volumes"
-        docker compose --project-name $projectname down -v
+        echo "Project reset time:" $(date --date "@${project_reset_time_s}")
+        echo "Project created time:" $(date --date "@${project_created_s}")
+
+        if [ $project_reset_time_s -gt $project_created_s ]; then
+            echo "Bringing down $projectname and deleting its volumes"
+            docker compose --project-name $projectname down -v
+        fi
+    else
+        echo "WARNING: no containers; cannot determine project creation time for reset check" >&2
     fi
 fi
-
 
 cmdargs="${@}"
 
