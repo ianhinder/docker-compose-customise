@@ -23,7 +23,7 @@ cd $env/project
 
 envname=${env##*/}
 projectpath=${env%/*}
-projectname=${projectpath##*/}
+projectname=${projectpath##*/}_${envname}
 
 if [ -n "${project_reset_time+1}" ]; then
     container_ids=( $(docker compose -p $projectname ps -a --format json | jq -r '.[] | .ID') )
@@ -56,6 +56,8 @@ if [ -n "${project_reset_time+1}" ]; then
         echo "WARNING: no containers; cannot determine project creation time for reset check" >&2
     fi
 fi
+
+export ENVIRONMENT_NAME="${envname}"
 
 cmdargs="${@}"
 
