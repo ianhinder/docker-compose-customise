@@ -26,7 +26,7 @@ projectpath=${env%/*}
 projectname=${projectpath##*/}_${envname}
 
 if [ -n "${project_reset_time+1}" ]; then
-    container_ids=( $(docker compose -p $projectname ps -a --format json | jq -r '.[] | .ID') )
+    container_ids=( $(docker compose -p $projectname ps -a --format json | while read -r x; do echo "$x" | jq -r '.ID'; done) )
 
     if [ ${#container_ids[*]} -ne 0 ]; then
         for container_id in ${container_ids[*]}; do
